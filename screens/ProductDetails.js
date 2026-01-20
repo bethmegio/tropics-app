@@ -468,29 +468,6 @@ export default function ProductDetails({ navigation, route }) {
             {product.description || "Premium quality product designed for tropical environments. Built to withstand harsh weather conditions while maintaining optimal performance."}
           </Text>
 
-          {/* Product Features */}
-          <View style={styles.featuresSection}>
-            <Text style={styles.sectionTitle}>Key Features</Text>
-            <View style={styles.featuresGrid}>
-              <View style={styles.featureItem}>
-                <Ionicons name="shield-checkmark-outline" size={20} color="#00BFFF" />
-                <Text style={styles.featureText}>Weather Resistant</Text>
-              </View>
-              <View style={styles.featureItem}>
-                <Ionicons name="time-outline" size={20} color="#00BFFF" />
-                <Text style={styles.featureText}>Long Lasting</Text>
-              </View>
-              <View style={styles.featureItem}>
-                <Ionicons name="leaf-outline" size={20} color="#00BFFF" />
-                <Text style={styles.featureText}>Eco Friendly</Text>
-              </View>
-              <View style={styles.featureItem}>
-                <Ionicons name="build-outline" size={20} color="#00BFFF" />
-                <Text style={styles.featureText}>Easy Installation</Text>
-              </View>
-            </View>
-          </View>
-
           {/* Quantity Selector */}
           <View style={styles.quantitySection}>
             <Text style={styles.sectionTitle}>Quantity</Text>
@@ -536,29 +513,6 @@ export default function ProductDetails({ navigation, route }) {
               <Ionicons name="flash-outline" size={20} color="#fff" />
               <Text style={styles.buttonText}>Buy Now</Text>
             </TouchableOpacity>
-          </View>
-
-          {/* Product Specifications */}
-          <View style={styles.specsSection}>
-            <Text style={styles.sectionTitle}>Specifications</Text>
-            <View style={styles.specsList}>
-              <View style={styles.specItem}>
-                <Text style={styles.specLabel}>Category</Text>
-                <Text style={styles.specValue}>{product.category || "General"}</Text>
-              </View>
-              <View style={styles.specItem}>
-                <Text style={styles.specLabel}>Material</Text>
-                <Text style={styles.specValue}>Premium Quality</Text>
-              </View>
-              <View style={styles.specItem}>
-                <Text style={styles.specLabel}>Warranty</Text>
-                <Text style={styles.specValue}>2 Years</Text>
-              </View>
-              <View style={styles.specItem}>
-                <Text style={styles.specLabel}>Delivery</Text>
-                <Text style={styles.specValue}>3-5 Business Days</Text>
-              </View>
-            </View>
           </View>
 
           {/* Reviews Section */}
@@ -788,29 +742,6 @@ const styles = StyleSheet.create({
     color: "#1a1a1a",
     marginBottom: 15,
   },
-  featuresSection: {
-    marginBottom: 25,
-  },
-  featuresGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-  },
-  featureItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "48%",
-    marginBottom: 12,
-    padding: 12,
-    backgroundColor: "#f8f9fa",
-    borderRadius: 12,
-  },
-  featureText: {
-    marginLeft: 8,
-    fontSize: 14,
-    color: "#333",
-    fontWeight: "500",
-  },
   quantitySection: {
     marginBottom: 25,
   },
@@ -867,35 +798,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     marginLeft: 8,
-  },
-  specsSection: {
-    marginBottom: 25,
-  },
-  specsList: {
-    backgroundColor: "#f8f9fa",
-    borderRadius: 12,
-    padding: 16,
-  },
-  specItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: "#e0e0e0",
-  },
-  specItemLast: {
-    borderBottomWidth: 0,
-  },
-  specLabel: {
-    fontSize: 14,
-    color: "#666",
-    fontWeight: "500",
-  },
-  specValue: {
-    fontSize: 14,
-    color: "#333",
-    fontWeight: "600",
   },
   // Reviews Styles
   reviewsSection: {

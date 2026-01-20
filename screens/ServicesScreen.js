@@ -109,6 +109,14 @@ export default function ServicesScreen({ navigation }) {
     }
   };
 
+  const showServiceDetails = (service) => {
+    Alert.alert(
+      service.name,
+      `Description: ${service.description || 'No description available'}\nPrice: ₱${service.price || 'N/A'}\nAvailable: ${service.available !== false ? 'Yes' : 'No'}`,
+      [{ text: 'OK' }]
+    );
+  };
+
   const handleQuickBook = (service) => {
     Alert.alert(
       `Book ${service.name}`,
@@ -413,16 +421,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    margin: 20,
     marginTop: -18,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 25,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    marginBottom: 20,
+    marginHorizontal: 0,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 0,
+    elevation: 12,
+    shadowColor: '#0EA5E9',
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.1,
-    shadowRadius: 12,
+    shadowRadius: 15,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   searchInput: {
     flex: 1,

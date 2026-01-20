@@ -12,7 +12,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View
 } from "react-native";
@@ -20,26 +19,27 @@ import { supabase } from "../supabaseClient";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const FALLBACK_BANNER = "https://images.unsplash.com/photo-1566014633661-349c6fae61e9?w=800";
+const PAGE_SIZE = 10;
 
 export default function HomeScreen({ navigation }) {
   const [banners, setBanners] = useState([]);
   const [bannerIndex, setBannerIndex] = useState(0);
   const [categories, setCategories] = useState([]);
-  const [products, setProducts] = useState([]);
   const [services, setServices] = useState([]);
   const [featuredProjects, setFeaturedProjects] = useState([]);
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
 
-  const [query, setQuery] = useState("");
-  const [searching, setSearching] = useState(false);
-
-  const PAGE_SIZE = 12;
+  const [products, setProducts] = useState([]);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [query, setQuery] = useState('');
+
+
 
   const scrollRef = useRef(null);
   const currentIndex = useRef(0);
@@ -86,10 +86,6 @@ export default function HomeScreen({ navigation }) {
     return () => stopAutoScroll();
   }, []);
 
-  useEffect(() => {
-    const t = setTimeout(() => loadProducts({ reset: true }), 450);
-    return () => clearTimeout(t);
-  }, [query]);
 
   // Start animations when data loads
   useEffect(() => {
@@ -283,6 +279,8 @@ export default function HomeScreen({ navigation }) {
     return colors.medium;
   };
 
+
+
   // ------------------ ENHANCED RENDER FUNCTIONS ------------------
   const renderCategoryItem = ({ item, index }) => (
     <Animated.View
@@ -320,41 +318,6 @@ export default function HomeScreen({ navigation }) {
     </Animated.View>
   );
 
-  const renderProductCard = ({ item, index }) => (
-    <Animated.View
-      style={{
-        opacity: fadeAnim,
-        transform: [
-          { translateY: slideAnim },
-          { scale: fadeAnim }
-        ],
-      }}
-    >
-      <TouchableOpacity
-        style={styles.productCardHorizontal}
-        onPress={() => navigation.navigate("ProductDetails", { id: item.id })}
-      >
-        <Image
-          source={{ uri: getImageUrl(item.image_url) }}
-          style={styles.productImageHorizontal}
-          resizeMode="cover"
-        />
-        <View style={styles.productInfoHorizontal}>
-          <Text numberOfLines={2} style={styles.productName}>
-            {item?.name}
-          </Text>
-          <Text style={styles.productPrice}>
-            ₱ {Number(item?.price || 0).toLocaleString()}
-          </Text>
-          {item?.is_featured && (
-            <View style={styles.featuredBadge}>
-              <Text style={styles.featuredText}>Featured</Text>
-            </View>
-          )}
-        </View>
-      </TouchableOpacity>
-    </Animated.View>
-  );
 
   const renderServiceCard = ({ item, index }) => (
     <Animated.View
@@ -448,7 +411,7 @@ export default function HomeScreen({ navigation }) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Loading Tropical Paradise...</Text>
+        <Text style={styles.loadingText}>Loading Tropics Pools...</Text>
       </View>
     );
   }
@@ -505,54 +468,33 @@ export default function HomeScreen({ navigation }) {
               </LinearGradient>
             </View>
             <View style={styles.headerTextContainer}>
-              <Text style={styles.welcomeText}>Welcome to</Text>
               <Text style={styles.companyName}>Tropics Pools & Landscape</Text>
             </View>
           </View>
-
-          {/* Quick Actions Grid */}
-          <View style={styles.quickActionsGrid}>
-            <QuickActionButton
-              icon="calendar"
-              title="Book Service"
-              onPress={() => navigation.navigate("Booking")}
-              color={colors.primary}
-            />
-            <QuickActionButton
-              icon="call"
-              title="Contact Us"
-              onPress={() => navigation.navigate("Contact")}
-              color={colors.success}
-            />
-            <QuickActionButton
-              icon="images"
-              title="Projects"
-              onPress={() => navigation.navigate("Projects")}
-              color={colors.warning}
-            />
-          </View>
         </LinearGradient>
 
-        {/* 🔍 ENHANCED SEARCH BAR */}
-        <View style={styles.searchContainer}>
-          <Ionicons name="search-outline" size={20} color={colors.medium} />
-          <TextInput
-            placeholder="Search pools, landscaping, chemicals..."
-            value={query}
-            onChangeText={setQuery}
-            style={styles.searchInput}
-            placeholderTextColor={colors.medium}
+        {/* Quick Actions Grid */}
+        <View style={styles.quickActionsGrid}>
+          <QuickActionButton
+            icon="calendar"
+            title="Book Service"
+            onPress={() => navigation.navigate("Booking")}
+            color={colors.primary}
           />
-          {query ? (
-            <TouchableOpacity onPress={() => setQuery("")}>
-              <Ionicons name="close-circle" size={20} color={colors.medium} />
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity onPress={() => navigation.navigate("Cart")}>
-              <Ionicons name="cart-outline" size={24} color={colors.primary} />
-            </TouchableOpacity>
-          )}
+          <QuickActionButton
+            icon="call"
+            title="Contact Us"
+            onPress={() => navigation.navigate("Contact")}
+            color={colors.primary}
+          />
+          <QuickActionButton
+            icon="images"
+            title="Projects"
+            onPress={() => navigation.navigate("Projects")}
+            color={colors.primary}
+          />
         </View>
+
 
         {/* 🎠 ENHANCED BANNER CAROUSEL */}
         <View style={styles.bannerContainer}>
@@ -610,7 +552,7 @@ export default function HomeScreen({ navigation }) {
         {/* 🏷️ ENHANCED CATEGORIES WITH IMAGES */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Shop Categories</Text>
+            <Text style={styles.sectionTitle}>Product Categories</Text>
             <TouchableOpacity onPress={() => navigation.navigate("Categories")}>
               <Text style={styles.seeAll}>View All</Text>
             </TouchableOpacity>
@@ -625,44 +567,6 @@ export default function HomeScreen({ navigation }) {
           />
         </View>
 
-        {/* ⭐ FEATURED PRODUCTS WITH BACKDROP */}
-        <View style={styles.productsSection}>
-          <LinearGradient
-            colors={['rgba(14, 165, 233, 0.05)', 'rgba(139, 92, 246, 0.05)']}
-            style={styles.productsBackground}
-          >
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Featured Products</Text>
-              <TouchableOpacity onPress={() => navigation.navigate("Products")}>
-                <Text style={styles.seeAll}>View All</Text>
-              </TouchableOpacity>
-            </View>
-            <FlatList
-              data={products.length ? products : Array(4).fill({})}
-              horizontal
-              keyExtractor={(_, index) => `product-${index}`}
-              contentContainerStyle={styles.productsRow}
-              showsHorizontalScrollIndicator={false}
-              renderItem={({ item, index }) => 
-                item.id ? renderProductCard({ item, index }) : renderShimmer()
-              }
-              onEndReached={() => {
-                if (!loadingMore && hasMore && !searching) {
-                  setLoadingMore(true);
-                  loadProducts();
-                }
-              }}
-              onEndReachedThreshold={0.4}
-              ListFooterComponent={
-                loadingMore ? (
-                  <View style={styles.loadingMore}>
-                    <ActivityIndicator size="small" color={colors.primary} />
-                  </View>
-                ) : null
-              }
-            />
-          </LinearGradient>
-        </View>
 
         {/* 🛠️ ENHANCED SERVICES SECTION */}
         <View style={styles.section}>
@@ -704,21 +608,9 @@ export default function HomeScreen({ navigation }) {
           </View>
         )}
 
-
-        {/* 📍 QUICK INFO */}
-        <View style={styles.infoSection}>
-          <View style={styles.infoItem}>
-            <Ionicons name="time" size={20} color={colors.primary} />
-            <Text style={styles.infoText}>Mon-Sun: 7AM-7PM</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Ionicons name="navigate" size={20} color={colors.primary} />
-            <Text style={styles.infoText}>Free Site Visits</Text>
-          </View>
-          <View style={styles.infoItem}>
-            <Ionicons name="shield-checkmark" size={20} color={colors.primary} />
-            <Text style={styles.infoText}>Licensed & Insured</Text>
-          </View>
+        {/* Footer Credits */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>© 2024 Tropics Pools & Landscape. All rights reserved.</Text>
         </View>
 
       </ScrollView>
@@ -779,11 +671,9 @@ const styles = StyleSheet.create({
 
   // Header Styles with Logo
   header: {
-    paddingTop: 60,
-    paddingBottom: 20,
+    paddingTop: 40,
+    paddingBottom: 10,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
   },
   headerTop: {
     flexDirection: "column",
@@ -840,7 +730,9 @@ const styles = StyleSheet.create({
   quickActionsGrid: {
     flexDirection: "row",
     justifyContent: "space-around",
-    paddingHorizontal: 10,
+    paddingHorizontal: 20,
+    marginTop: 20,
+    marginBottom: 20,
   },
   quickAction: {
     alignItems: "center",
@@ -862,7 +754,7 @@ const styles = StyleSheet.create({
   quickActionText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#FFFFFF",
+    color: "#1E293B",
     textAlign: "center",
   },
 
@@ -871,11 +763,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
-    margin: 10,
-    marginTop: -15,
-    paddingHorizontal: 18,
+    marginHorizontal: 0,
+    marginTop: 10,
+    paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 25,
+    borderRadius: 0,
     elevation: 12,
     shadowColor: "#0EA5E9",
     shadowOffset: { width: 0, height: 4 },
@@ -1261,5 +1153,18 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
     width: "100%",
+  },
+
+  // Footer
+  footer: {
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    backgroundColor: "#F8FAFC",
+  },
+  footerText: {
+    fontSize: 12,
+    color: "#64748B",
+    textAlign: "center",
   },
 });

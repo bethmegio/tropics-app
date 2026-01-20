@@ -412,7 +412,7 @@ export default function ProfileScreen({ navigation }) {
       >
         {/* Header with Profile Info */}
         <LinearGradient
-          colors={['#0077b6', '#00BFFF']}
+          colors={['#4ab8ebff', '#2e4dc8ff']}
           style={styles.header}
         >
           <View style={styles.profileHeader}>
@@ -422,9 +422,6 @@ export default function ProfileScreen({ navigation }) {
                   {user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
                 </Text>
               </View>
-              <TouchableOpacity style={styles.editAvatarButton} onPress={handleEditProfile}>
-                <Ionicons name="camera" size={16} color="#fff" />
-              </TouchableOpacity>
             </View>
             
             <Text style={styles.userName}>
@@ -714,10 +711,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 30,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+    paddingTop: 40,
+    paddingBottom: 10,
+    paddingHorizontal: 20,
   },
   profileHeader: {
     alignItems: 'center',
@@ -741,19 +737,6 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: 'bold',
     color: '#fff',
-  },
-  editAvatarButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#0077b6',
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#fff',
   },
   userName: {
     fontSize: 24,

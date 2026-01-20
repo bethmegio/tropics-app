@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -292,34 +293,20 @@ export default function CategoriesScreen({ navigation, route }) {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <LinearGradient
+        colors={['#4ab8ebff', '#2e4dc8ff']}
+        style={styles.header}
+      >
         <Text style={styles.headerTitle}>
           {selectedCategory ? selectedCategory.name : "All Categories"}
         </Text>
         <Text style={styles.headerSubtitle}>
-          {selectedCategory 
-            ? `${filteredProducts.length} products available` 
+          {selectedCategory
+            ? `${filteredProducts.length} products available`
             : "Browse all products"
           }
         </Text>
-      </View>
-
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search-outline" size={20} color="#777" />
-        <TextInput
-          placeholder="Search products..."
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          style={styles.searchInput}
-          placeholderTextColor="#64748B"
-        />
-        {searchQuery ? (
-          <TouchableOpacity onPress={() => setSearchQuery("")}>
-            <Ionicons name="close-circle" size={20} color="#777" />
-          </TouchableOpacity>
-        ) : null}
-      </View>
+      </LinearGradient>
 
       <ScrollView
         refreshControl={
@@ -329,6 +316,23 @@ export default function CategoriesScreen({ navigation, route }) {
       >
         {/* Categories Grid */}
         <View style={styles.section}>
+          {/* Search Bar */}
+          <View style={styles.searchContainer}>
+            <Ionicons name="search-outline" size={30} color="#777" />
+            <TextInput
+              placeholder="Search products..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              style={styles.searchInput}
+              placeholderTextColor="#64748B"
+            />
+            {searchQuery ? (
+              <TouchableOpacity onPress={() => setSearchQuery("")}>
+                <Ionicons name="close-circle" size={20} color="#777" />
+              </TouchableOpacity>
+            ) : null}
+          </View>
+
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Categories</Text>
             <TouchableOpacity onPress={handleShowAll}>
@@ -337,7 +341,7 @@ export default function CategoriesScreen({ navigation, route }) {
               </Text>
             </TouchableOpacity>
           </View>
-          
+
           <FlatList
             data={categories}
             horizontal
@@ -400,16 +404,9 @@ const styles = StyleSheet.create({
     color: "#666",
   },
   header: {
-    padding: 20,
-    paddingTop: 60,
-    backgroundColor: "#fff",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
+    paddingTop: 40,
+    paddingBottom: 10,
+    paddingHorizontal: 20,
   },
   headerTitle: {
     fontSize: 24,
@@ -425,11 +422,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#fff",
-    margin: 20,
     marginTop: -18,
+    marginBottom: 20,
+    marginHorizontal: 0,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: 25,
+    borderRadius: 0,
     elevation: 12,
     shadowColor: "#0EA5E9",
     shadowOffset: { width: 0, height: 6 },
