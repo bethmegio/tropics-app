@@ -29,19 +29,26 @@ export default function ServicesScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [featuredServices, setFeaturedServices] = useState([]);
   const fadeAnim = useState(new Animated.Value(0))[0];
+
+  // Categories to remove
+  const categoriesToRemove = [
+    'accessories', 
+    'chemicals', 
+    'cleaning tools', 
+    'electrical equipment', 
+    'pool accessories'
+  ].map(cat => cat.toLowerCase());
 
   const fetchServices = async () => {
     try {
       setLoading(true);
       
-      // ✅ FIXED: Fetch services without the non-existent is_featured column
       const [servicesResponse, categoriesResponse] = await Promise.all([
         supabase
           .from('services')
           .select('*')
-          .order('name'), // Removed is_featured ordering
+          .order('name'),
         supabase
           .from('categories')
           .select('*')
@@ -55,10 +62,13 @@ export default function ServicesScreen({ navigation }) {
       const categoriesData = categoriesResponse.data || [];
 
       setServices(servicesData);
-      setCategories(['All', ...categoriesData.map((c) => c.name)]);
       
-      // ✅ FIXED: Use popular field instead of is_featured, or just take first 3 as featured
-      setFeaturedServices(servicesData.slice(0, 3) || []);
+      // Filter out unwanted categories
+      const filteredCategories = categoriesData
+        .filter(cat => !categoriesToRemove.includes(cat.name.toLowerCase()))
+        .map(c => c.name);
+      
+      setCategories(['All', ...filteredCategories]);
 
     } catch (error) {
       console.error('Fetch error:', error);
@@ -132,8 +142,6 @@ export default function ServicesScreen({ navigation }) {
     );
   };
 
- 
-
   // Filter services based on category and search
   const filteredServices = services.filter(service => {
     const matchesCategory = selectedCategory === 'All' || service.category === selectedCategory;
@@ -169,18 +177,11 @@ export default function ServicesScreen({ navigation }) {
         
         {/* Badges */}
         <View style={styles.badgeContainer}>
-          {/* ✅ FIXED: Only show popular badge if the field exists */}
+          {/* Show popular badge if the field exists */}
           {item.popular && (
             <View style={[styles.badge, styles.popularBadge]}>
               <Ionicons name="flash" size={12} color="#fff" />
               <Text style={styles.badgeText}>Popular</Text>
-            </View>
-          )}
-          {/* Show featured badge for first 3 services */}
-          {featuredServices.some(fs => fs.id === item.id) && (
-            <View style={[styles.badge, styles.featuredBadge]}>
-              <Ionicons name="star" size={12} color="#fff" />
-              <Text style={styles.badgeText}>Featured</Text>
             </View>
           )}
         </View>
@@ -223,31 +224,6 @@ export default function ServicesScreen({ navigation }) {
         </Text>
       </TouchableOpacity>
     </Animated.View>
-  );
-
-  const renderFeaturedService = ({ item }) => (
-    <TouchableOpacity
-      style={styles.featuredCard}
-      onPress={() => showServiceDetails(item)}
-    >
-      <Image 
-        source={{ uri: item.image_url || 'https://images.unsplash.com/photo-1566014633661-349c6fae61e9?w=400' }} 
-        style={styles.featuredImage} 
-      />
-      <LinearGradient
-        colors={['transparent', 'rgba(0,0,0,0.8)']}
-        style={styles.featuredGradient}
-      >
-        <View style={styles.featuredContent}>
-          <View style={styles.featuredBadge}>
-            <Ionicons name="star" size={14} color="#FFD700" />
-            <Text style={styles.featuredBadgeText}>Featured</Text>
-          </View>
-          <Text style={styles.featuredName}>{item.name}</Text>
-          
-        </View>
-      </LinearGradient>
-    </TouchableOpacity>
   );
 
   if (loading) {
@@ -300,51 +276,35 @@ export default function ServicesScreen({ navigation }) {
         }
         showsVerticalScrollIndicator={false}
       >
-        {/* Featured Services - Only show if we have services */}
-        {featuredServices.length > 0 && (
+        {/* Categories Tabs */}
+        {categories.length > 1 && (
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Featured Services</Text>
-              <Ionicons name="star" size={20} color="#FFD700" />
-            </View>
-            <FlatList
-              data={featuredServices}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              keyExtractor={(item) => item.id.toString()}
-              contentContainerStyle={styles.featuredList}
-              renderItem={renderFeaturedService}
-            />
+            <Text style={styles.sectionTitle}>Categories</Text>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false} 
+              style={styles.tabsContainer}
+            >
+              {categories.map((cat) => (
+                <TouchableOpacity
+                  key={cat}
+                  style={[
+                    styles.tab,
+                    selectedCategory === cat && styles.selectedTab,
+                  ]}
+                  onPress={() => setSelectedCategory(cat)}
+                >
+                  <Text style={[
+                    styles.tabText,
+                    selectedCategory === cat && styles.selectedTabText
+                  ]}>
+                    {cat}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         )}
-
-        {/* Categories Tabs */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Categories</Text>
-          <ScrollView 
-            horizontal 
-            showsHorizontalScrollIndicator={false} 
-            style={styles.tabsContainer}
-          >
-            {categories.map((cat) => (
-              <TouchableOpacity
-                key={cat}
-                style={[
-                  styles.tab,
-                  selectedCategory === cat && styles.selectedTab,
-                ]}
-                onPress={() => setSelectedCategory(cat)}
-              >
-                <Text style={[
-                  styles.tabText,
-                  selectedCategory === cat && styles.selectedTabText
-                ]}>
-                  {cat}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
 
         {/* Services Grid */}
         <View style={styles.section}>
@@ -382,7 +342,6 @@ export default function ServicesScreen({ navigation }) {
   );
 }
 
-// ... (styles remain exactly the same as previous version)
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
@@ -483,64 +442,6 @@ const styles = StyleSheet.create({
   selectedTabText: {
     color: '#fff',
   },
-  featuredList: {
-    paddingHorizontal: 15,
-  },
-  featuredCard: {
-    width: 280,
-    height: 160,
-    marginRight: 15,
-    borderRadius: 16,
-    overflow: 'hidden',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-  },
-  featuredImage: {
-    width: '100%',
-    height: '100%',
-  },
-  featuredGradient: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: '60%',
-    justifyContent: 'flex-end',
-    padding: 15,
-  },
-  featuredContent: {
-    
-  },
-  featuredBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  featuredBadgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  featuredName: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  featuredPrice: {
-    color: '#FFD700',
-    fontSize: 16,
-    fontWeight: '700',
-  },
   servicesGrid: {
     paddingHorizontal: 15,
   },
@@ -573,9 +474,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     marginRight: 6,
-  },
-  featuredBadge: {
-    backgroundColor: '#FF6B6B',
   },
   popularBadge: {
     backgroundColor: '#4ECDC4',

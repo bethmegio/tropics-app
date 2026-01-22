@@ -7,6 +7,7 @@ import {
   Dimensions,
   FlatList,
   Image,
+  Linking,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -177,6 +178,169 @@ export default function CartScreen({ navigation }) {
 
   const calculateTotal = () => {
     return calculateSubtotal();
+  };
+
+  const openGCashApp = async () => {
+    const totalAmount = calculateTotal();
+    const gcashNumber = '09157362648';
+    const message = `Payment for Tropics Pools order. Total: ₱${totalAmount}`;
+    
+    // Try different GCash URL schemes
+    const gcashUrls = [
+      `gcash://payment/${gcashNumber}?amount=${totalAmount}&message=${encodeURIComponent(message)}`,
+      `gcashapp://payment/${gcashNumber}?amount=${totalAmount}`,
+      `com.globe.gcash.android://payment/${gcashNumber}?amount=${totalAmount}`
+    ];
+    
+    try {
+      // Try each URL scheme
+      let canOpen = false;
+      let urlToOpen = '';
+      
+      for (const url of gcashUrls) {
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+          canOpen = true;
+          urlToOpen = url;
+          break;
+        }
+      }
+      
+      if (canOpen && urlToOpen) {
+        await Linking.openURL(urlToOpen);
+        // Show confirmation after opening GCash
+        setTimeout(() => {
+          Alert.alert(
+            'GCash Opened',
+            'Please complete the payment in the GCash app. After payment, save your reference number.',
+            [
+              {
+                text: 'I Completed Payment',
+                onPress: async () => {
+                  try {
+                    // Create order in database
+                    await createOrder();
+                    Alert.alert('Order Placed!', 'Your order has been confirmed. Please visit our store with your GCash receipt for pickup.');
+                    setCartItems([]);
+                  } catch (error) {
+                    Alert.alert('Error', 'Failed to create order. Please try again.');
+                  }
+                }
+              },
+              {
+                text: 'Cancel Payment',
+                style: 'cancel',
+                onPress: () => {
+                  Alert.alert('Payment Cancelled', 'You can complete the payment later or choose a different payment method.');
+                }
+              }
+            ]
+          );
+        }, 1000);
+      } else {
+        // If GCash app is not installed, show instructions
+        Alert.alert(
+          'GCash App Not Found',
+          `Please install GCash app or use the alternative payment method.\n\nOur GCash number: ${gcashNumber}\nAmount: ₱${totalAmount.toLocaleString()}`,
+          [
+            {
+              text: 'Download GCash',
+              onPress: () => Linking.openURL('https://play.google.com/store/apps/details?id=com.globe.gcash.android')
+            },
+            { 
+              text: 'Use Cash on Pickup',
+              onPress: () => {
+                setSelectedPaymentMethod('cash');
+                Alert.alert('Switched to Cash', 'You can pay with cash when you pick up your order.');
+              }
+            },
+            { text: 'Cancel', style: 'cancel' }
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('Error opening GCash:', error);
+      Alert.alert('Error', 'Could not open GCash app. Please try again or use cash on pickup.');
+    }
+  };
+
+  const createOrder = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not logged in');
+
+      // Create order
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({
+          user_id: user.id,
+          total_amount: calculateTotal(),
+          status: 'pending',
+          payment_method: selectedPaymentMethod,
+          payment_status: selectedPaymentMethod === 'gcash' ? 'paid' : 'pending'
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // Create order items
+      const orderItems = cartItems.map(item => ({
+        order_id: order.id,
+        product_id: item.product_id,
+        quantity: item.quantity,
+        price: item.price
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
+      // Clear cart items
+      const { error: deleteError } = await supabase
+        .from('cart_items')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (deleteError) throw deleteError;
+
+      return true;
+    } catch (error) {
+      console.error('Error creating order:', error);
+      throw error;
+    }
+  };
+
+  const handleCheckout = async () => {
+    if (selectedPaymentMethod === 'gcash') {
+      await openGCashApp();
+    } else {
+      // Cash on pickup
+      Alert.alert(
+        'Confirm Order',
+        `Your total is ₱${Number(calculateTotal()).toLocaleString()}. Pay with cash when you pick up your order.\n\nPickup Address: Purok Bougainvillea, Dumaguete City`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Place Order',
+            onPress: async () => {
+              try {
+                await createOrder();
+                Alert.alert(
+                  'Order Placed Successfully!',
+                  `Your order has been confirmed.\n\nOrder Total: ₱${Number(calculateTotal()).toLocaleString()}\nPayment Method: Cash on Pickup\n\nPickup Address:\nPurok Bougainvillea, Dumaguete City\nOpen: Mon-Sun, 7AM-7PM\nContact: 0915 736 2648`
+                );
+                setCartItems([]);
+              } catch (error) {
+                Alert.alert('Error', 'Failed to place order. Please try again.');
+              }
+            }
+          }
+        ]
+      );
+    }
   };
 
   const renderCartItem = ({ item }) => (
@@ -486,11 +650,18 @@ export default function CartScreen({ navigation }) {
                 <Ionicons name="information-circle" size={18} color="#0078b5" />
                 <Text style={styles.gcashHeaderText}>GCash Payment Instructions</Text>
               </View>
-              <Text style={styles.gcashText}>1. Open GCash app and tap "Send Money"</Text>
-              <Text style={styles.gcashText}>2. Enter our GCash number: <Text style={styles.gcashNumber}>0915 736 2648</Text></Text>
-              <Text style={styles.gcashText}>3. Enter amount: ₱{Number(calculateTotal()).toLocaleString()}</Text>
-              <Text style={styles.gcashText}>4. Send payment and save your reference number</Text>
-              <Text style={styles.gcashText}>5. Show your GCash receipt when picking up your order</Text>
+              <Text style={styles.gcashText}>
+                Tap "Proceed to Checkout" to open GCash app and send payment to:
+              </Text>
+              <Text style={[styles.gcashText, styles.gcashHighlight]}>
+                GCash Number: 0915 736 2648
+              </Text>
+              <Text style={[styles.gcashText, styles.gcashHighlight]}>
+                Amount: ₱{Number(calculateTotal()).toLocaleString()}
+              </Text>
+              <Text style={styles.gcashNote}>
+                Note: After payment, please save your reference number and show it at pickup.
+              </Text>
             </View>
           )}
         </View>
@@ -498,39 +669,7 @@ export default function CartScreen({ navigation }) {
         {/* Checkout Button */}
         <TouchableOpacity
           style={styles.checkoutButton}
-          onPress={() => {
-            if (selectedPaymentMethod === 'gcash') {
-              Alert.alert(
-                'GCash Payment',
-                `Please send ₱${Number(calculateTotal()).toLocaleString()} to our GCash: 0915 736 2648\n\nAfter payment, show your GCash receipt at pickup.`,
-                [
-                  { text: 'Cancel', style: 'cancel' },
-                  { 
-                    text: 'Confirm Order', 
-                    onPress: () => {
-                      Alert.alert('Order Placed!', 'Your order has been placed. Please visit our store with your GCash receipt for pickup.');
-                      setCartItems([]);
-                    }
-                  }
-                ]
-              );
-            } else {
-              Alert.alert(
-                'Checkout',
-                `Your total is ₱${Number(calculateTotal()).toLocaleString()}. Pay at pickup.`,
-                [
-                  { text: 'Cancel', style: 'cancel' },
-                  {
-                    text: 'Proceed',
-                    onPress: () => {
-                      Alert.alert('Success', 'Your order has been placed! Please visit our store for pickup.');
-                      setCartItems([]);
-                    }
-                  }
-                ]
-              );
-            }
-          }}
+          onPress={() => handleCheckout()}
         >
           <View style={[styles.checkoutGradient, { backgroundColor: '#00BFFF' }]}>
             <Ionicons name="cart" size={24} color="#fff" />
@@ -923,8 +1062,21 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     lineHeight: 18,
   },
-  gcashNumber: {
+  gcashHighlight: {
     fontWeight: '700',
     color: '#0078b5',
+    backgroundColor: 'rgba(0, 120, 181, 0.1)',
+    padding: 8,
+    borderRadius: 6,
+    marginVertical: 4,
+  },
+  gcashNote: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 120, 181, 0.2)',
   },
 });
